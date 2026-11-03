@@ -1,0 +1,1 @@
+2026-11-02 16:56:52 | ERROR | ValueError en proceso interactivo de venta: invalid literal for int() with base 10: 'P002'
