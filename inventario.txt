@@ -1,0 +1,2 @@
+Perecedero,P002,Leche Entera,20,20.0,Lácteos,2027-10-26,10.0
+NoPerecedero,P003,Carne Seca,6,87.0,cárnico,Plástico,0.0

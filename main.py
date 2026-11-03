@@ -31,7 +31,7 @@ if __name__ == "__main__":
         print("3. Registrar venta de productos")
         print("4. Guardar inventario actual en archivo (.txt)")
         print("5. Cargar / Recargar inventario desde archivo (.txt)")
-        print("6. Simular y registrar 3 errores en la bitácora (log_errores.txt)")
+        print("6. Registrar errores en la bitácora (log_errores.txt)")
         print("7. Salir del programa")
         
         opcion = input("\nSeleccione una opción (1-7): ").strip()
@@ -131,7 +131,7 @@ if __name__ == "__main__":
                 registrarError(f"FileNotFoundError al recargar: {e}")
 
         elif opcion == "6":
-            print("\n--- Provocando Y Registrando 3 Errores Para La Bitácora ---")
+            print("\n---Registrando Errores Para La Bitácora ---")
             # Error 1: FileNotFoundError
             try:
                 GestorArchivos.cargarInventario("archivo_inexistente.txt")
@@ -160,7 +160,7 @@ if __name__ == "__main__":
                 registrarError(err)
                 print(f"   3. Capturado y registrado: TypeError/ValueError (tipo de dato en stock)")
 
-            print("¡Los 3 errores obligatorios han sido guardados en 'log_errores.txt'!")
+            print("¡Los errores han sido guardados en 'log_errores.txt'!")
 
         elif opcion == "7":
             print("\nCerrando el sistema de abarrotes. ¡Hasta luego!")

@@ -1,1 +1,9 @@
 2026-11-02 16:56:52 | ERROR | ValueError en proceso interactivo de venta: invalid literal for int() with base 10: 'P002'
+2026-11-02 22:55:09 | ERROR | ValueError en proceso interactivo de venta: invalid literal for int() with base 10: 'P002'
+2026-11-02 23:03:07 | ERROR | ValueError en proceso interactivo de venta: invalid literal for int() with base 10: 'P003'
+2026-11-02 23:03:13 | ERROR | FileNotFoundError: No se encontró el archivo 'archivo_inexistente.txt' -> No se encontró el archivo: archivo_inexistente.txt
+2026-11-02 23:03:13 | ERROR | ValueError: El precio ingresado no puede ser negativo -> El precio no puede ser negativo.
+2026-11-02 23:03:13 | ERROR | TypeError/ValueError: Asignación de tipo de dato inválido al stock -> '<' not supported between instances of 'str' and 'int'
+2026-11-02 23:07:59 | ERROR | FileNotFoundError: No se encontró el archivo 'archivo_inexistente.txt' -> No se encontró el archivo: archivo_inexistente.txt
+2026-11-02 23:07:59 | ERROR | ValueError: El precio ingresado no puede ser negativo -> El precio no puede ser negativo.
+2026-11-02 23:07:59 | ERROR | TypeError/ValueError: Asignación de tipo de dato inválido al stock -> '<' not supported between instances of 'str' and 'int'
