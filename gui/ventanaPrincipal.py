@@ -320,7 +320,8 @@ class VentanaPrincipal:
             os.path.join(self.rutaBase, "assets", "logo_don_beto.jpg"),
             os.path.join(self.rutaBase, "assets", "logo.png"),
             os.path.join(self.rutaBase, "assets", "logo.jpg"),
-            os.path.join(self.rutaBase, "Gemini_Generated_Image_5tyge25tyge25tyg.jpg"),
+            os.path.join(self.rutaBase, "logo_don_beto.png"),
+            os.path.join(self.rutaBase, "logo_don_beto.jpg"),
         ]
 
         rutaEncontrada = None
@@ -341,20 +342,29 @@ class VentanaPrincipal:
                 etiquetaLogo.pack(side="left", padx=(15, 12))
                 return
             except ImportError:
-                if rutaEncontrada.lower().endswith(".png"):
+                # Si Pillow no está instalado, Tkinter nativo solo admite PNG/GIF
+                if rutaEncontrada.lower().endswith((".png", ".gif")):
                     try:
-                        self.imagenLogo = tk.PhotoImage(file=rutaEncontrada)
+                        imgNativa = tk.PhotoImage(file=rutaEncontrada)
+                        factor = max(1, imgNativa.width() // 92, imgNativa.height() // 92)
+                        if factor > 1:
+                            imgNativa = imgNativa.subsample(factor, factor)
+                        self.imagenLogo = imgNativa
                         etiquetaLogo = tk.Label(
                             contenedor, image=self.imagenLogo, bg=self.colorAzulMarino
                         )
                         etiquetaLogo.pack(side="left", padx=(15, 12))
                         return
-                    except tk.TclError:
-                        pass
+                    except tk.TclError as e:
+                        registrarError(f"Error al cargar PNG nativo: {e}")
+                else:
+                    registrarError(
+                        "Para mostrar el logo .jpg instala Pillow ('pip install pillow') o guárdalo como .png"
+                    )
             except Exception as e:
                 registrarError(f"No se pudo cargar imagen de logo: {e}")
 
-        # Emblema de respaldo si aún no se coloca el archivo en assets/
+        # Emblema de respaldo si no hay Pillow para .jpg o no existe el archivo
         lienzoLogo = tk.Canvas(
             contenedor,
             width=90,
@@ -722,7 +732,7 @@ class VentanaPrincipal:
             self.entryExtra2.grid_remove()
 
     # Limpia todos los campos del formulario y habilita el campo de código.
-    def _limpiarFormulario(self):
+    def _limpiarFormulario(self, limpiarSeleccion: bool = True):
         self.entradas["codigo"].config(state="normal")
         self.entradas["tipo"].config(state="readonly")
         for clave in ("codigo", "nombre", "stock", "precio", "idCat"):
@@ -730,7 +740,8 @@ class VentanaPrincipal:
         self.entradas["nombreCat"].set("Lácteos")
         self.entryExtra1.delete(0, tk.END)
         self.entryExtra2.delete(0, tk.END)
-        self.tabla.selection_remove(self.tabla.selection())
+        if limpiarSeleccion:
+            self.tabla.selection_remove(self.tabla.selection())
 
     # Rellena el formulario automáticamente al seleccionar un renglón de la tabla.
     def _alSeleccionarFila(self, evento=None):
@@ -743,7 +754,8 @@ class VentanaPrincipal:
 
         try:
             prod = self.tienda.buscarProductoPorCodigo(codigo)
-            self._limpiarFormulario()
+            # Se pasa limpiarSeleccion=False para NO borrar la selección activa de la tabla
+            self._limpiarFormulario(limpiarSeleccion=False)
 
             esPerecedero = isinstance(prod, Perecedero)
             self.entradas["tipo"].set("Perecedero" if esPerecedero else "NoPerecedero")
