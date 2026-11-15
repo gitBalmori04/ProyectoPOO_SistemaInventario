@@ -1,55 +1,53 @@
-"""Módulo que define las clases del dominio para el sistema de inventario de abarrotes."""
+# Módulo que define las clases del dominio para el sistema de inventario de abarrotes.
 
 from datetime import datetime
 from utils.excepciones import ProductoNoEncontradoError, StockInsuficienteError
 
 
+# Representa el precio unitario de un producto con validación de monto y divisa.
 class Precio:
-    """Representa el precio unitario de un producto con validación de monto y divisa."""
-
+    # Inicializa el precio validando desde el constructor que no sea negativo.
     def __init__(self, valor: float, moneda: str = "MXN"):
-        """Inicializa el precio validando desde el constructor que no sea negativo."""
         if not moneda or not str(moneda).strip():
             raise ValueError("La moneda no puede estar vacía.")
         self._moneda = str(moneda).strip().upper()
         self.valor = valor  # Invoca al setter para validar desde __init__
 
+    # Devuelve el monto numérico del precio.
     @property
     def valor(self) -> float:
-        """Devuelve el monto numérico del precio."""
         return self._valor
 
+    # Asigna un nuevo monto verificando que sea mayor o igual a cero.
     @valor.setter
     def valor(self, nuevoValor: float):
-        """Asigna un nuevo monto verificando que sea mayor o igual a cero."""
         valorFloat = float(nuevoValor)
         if valorFloat < 0:
             raise ValueError("El precio no puede ser negativo.")
         self._valor = valorFloat
 
+    # Devuelve el código de moneda (ej. MXN).
     @property
     def moneda(self) -> str:
-        """Devuelve el código de moneda (ej. MXN)."""
         return self._moneda
 
+    # Retorna el valor numérico del precio.
     def obtenerValor(self) -> float:
-        """Retorna el valor numérico del precio."""
         return self._valor
 
+    # Actualiza el valor del precio pasando por la validación del setter.
     def actualizarValor(self, nuevoValor: float):
-        """Actualiza el valor del precio pasando por la validación del setter."""
         self.valor = nuevoValor
 
+    # Devuelve el precio formateado con símbolo y divisa.
     def __str__(self) -> str:
-        """Devuelve el precio formateado con símbolo y divisa."""
         return f"${self._valor:.2f} {self._moneda}"
 
 
+# Representa una categoría de productos dentro de la tienda.
 class Categoria:
-    """Representa una categoría de productos dentro de la tienda."""
-
+    # Inicializa la categoría validando su identificador y nombre.
     def __init__(self, idCategoria: int, nombre: str):
-        """Inicializa la categoría validando su identificador y nombre."""
         if int(idCategoria) <= 0:
             raise ValueError("El ID de la categoría debe ser mayor a cero.")
         if not nombre or not str(nombre).strip():
@@ -58,40 +56,39 @@ class Categoria:
         self._nombre = str(nombre).strip()
         self._listaProductos = []
 
+    # Devuelve el identificador numérico de la categoría.
     @property
     def idCategoria(self) -> int:
-        """Devuelve el identificador numérico de la categoría."""
         return self._idCategoria
 
+    # Devuelve el nombre de la categoría.
     @property
     def nombre(self) -> str:
-        """Devuelve el nombre de la categoría."""
         return self._nombre
 
+    # Devuelve una copia de los productos registrados en la categoría.
     @property
     def listaProductos(self) -> list:
-        """Devuelve una copia de los productos registrados en la categoría."""
         return list(self._listaProductos)
 
+    # Asocia un producto a esta categoría.
     def agregarProducto(self, producto):
-        """Asocia un producto a esta categoría."""
         if producto not in self._listaProductos:
             self._listaProductos.append(producto)
 
+    # Retorna la lista de productos pertenecientes a la categoría.
     def listarProductos(self) -> list:
-        """Retorna la lista de productos pertenecientes a la categoría."""
         return list(self._listaProductos)
 
+    # Devuelve el nombre de la categoría.
     def __str__(self) -> str:
-        """Devuelve el nombre de la categoría."""
         return self._nombre
 
 
+# Clase base que modela un artículo general del inventario.
 class Producto:
-    """Clase base que modela un artículo general del inventario."""
-
+    # Inicializa un producto validando que código, nombre y stock sean válidos.
     def __init__(self, codigo: str, nombre: str, stock: int, precio: Precio, categoria: Categoria):
-        """Inicializa un producto validando que código, nombre y stock sean válidos."""
         if not codigo or not str(codigo).strip():
             raise ValueError("El código del producto no puede estar vacío.")
         if not nombre or not str(nombre).strip():
@@ -108,24 +105,24 @@ class Producto:
         self._categoria = categoria
         self._categoria.agregarProducto(self)
 
+    # Devuelve el código único del producto.
     @property
     def codigo(self) -> str:
-        """Devuelve el código único del producto."""
         return self._codigo
 
+    # Devuelve el nombre del producto.
     @property
     def nombre(self) -> str:
-        """Devuelve el nombre del producto."""
         return self._nombre
 
+    # Devuelve las existencias actuales del producto.
     @property
     def stock(self) -> int:
-        """Devuelve las existencias actuales del producto."""
         return self._stock
 
+    # Asigna un nuevo valor de stock verificando que no sea negativo.
     @stock.setter
     def stock(self, nuevoStock: int):
-        """Asigna un nuevo valor de stock verificando que no sea negativo."""
         if isinstance(nuevoStock, bool):
             raise TypeError("El stock debe ser un número entero, no booleano.")
         stockInt = int(nuevoStock)
@@ -133,18 +130,18 @@ class Producto:
             raise ValueError("El stock no puede ser negativo.")
         self._stock = stockInt
 
+    # Devuelve el objeto Precio asociado al producto.
     @property
     def precio(self) -> Precio:
-        """Devuelve el objeto Precio asociado al producto."""
         return self._precio
 
+    # Devuelve el objeto Categoria asociado al producto.
     @property
     def categoria(self) -> Categoria:
-        """Devuelve el objeto Categoria asociado al producto."""
         return self._categoria
 
+    # Incrementa o decrementa el stock; lanza StockInsuficienteError si no alcanza.
     def actualizarStock(self, cantidad: int):
-        """Incrementa o decrementa el stock; lanza StockInsuficienteError si no alcanza."""
         cantidadInt = int(cantidad)
         if self._stock + cantidadInt < 0:
             raise StockInsuficienteError(
@@ -152,16 +149,16 @@ class Producto:
             )
         self._stock += cantidadInt
 
+    # Retorna el objeto Precio del producto.
     def obtenerPrecio(self) -> Precio:
-        """Retorna el objeto Precio del producto."""
         return self._precio
 
+    # Indica si existe al menos una unidad disponible.
     def estaDisponible(self) -> bool:
-        """Indica si existe al menos una unidad disponible."""
         return self._stock > 0
 
+    # Devuelve la representación textual del producto.
     def __str__(self) -> str:
-        """Devuelve la representación textual del producto."""
         return (
             f"Código: {self._codigo} | Nombre: {self._nombre} | "
             f"Categoría: {self._categoria.nombre} (ID:{self._categoria.idCategoria}) | "
@@ -169,9 +166,9 @@ class Producto:
         )
 
 
+# Subclase de Producto para artículos con fecha de caducidad y control térmico.
 class Perecedero(Producto):
-    """Subclase de Producto para artículos con fecha de caducidad y control térmico."""
-
+    # Inicializa un producto perecedero validando el formato de su fecha de caducidad.
     def __init__(
         self,
         codigo: str,
@@ -182,24 +179,23 @@ class Perecedero(Producto):
         fechaCaducidad: str,
         temperaturaConservacion: float,
     ):
-        """Inicializa un producto perecedero validando el formato de su fecha de caducidad."""
         super().__init__(codigo, nombre, stock, precio, categoria)
         self._fechaCaducidad = str(fechaCaducidad).strip()
         self._obtenerFechaDate()  # Valida que la fecha sea real desde el constructor
         self._temperaturaConservacion = float(temperaturaConservacion)
 
+    # Devuelve la fecha de caducidad en texto.
     @property
     def fechaCaducidad(self) -> str:
-        """Devuelve la fecha de caducidad en texto."""
         return self._fechaCaducidad
 
+    # Devuelve la temperatura de conservación en grados Celsius.
     @property
     def temperaturaConservacion(self) -> float:
-        """Devuelve la temperatura de conservación en grados Celsius."""
         return self._temperaturaConservacion
 
+    # Convierte la fecha de caducidad a objeto date (acepta YYYY-MM-DD o DD/MM/YYYY).
     def _obtenerFechaDate(self):
-        """Convierte la fecha de caducidad a objeto date (acepta YYYY-MM-DD o DD/MM/YYYY)."""
         for formato in ("%Y-%m-%d", "%d/%m/%Y"):
             try:
                 return datetime.strptime(self._fechaCaducidad, formato).date()
@@ -209,17 +205,17 @@ class Perecedero(Producto):
             f"Formato de fecha inválido: '{self._fechaCaducidad}'. Use YYYY-MM-DD."
         )
 
+    # Evalúa si el producto ya caducó comparando su fecha contra la fecha actual.
     def verificarCaducidad(self) -> bool:
-        """Evalúa si el producto ya caducó comparando su fecha contra la fecha actual."""
         fechaCad = self._obtenerFechaDate()
         return fechaCad < datetime.now().date()
 
+    # Retorna True si el producto requiere temperatura menor a 10 °C.
     def requiereRefrigeracion(self) -> bool:
-        """Retorna True si el producto requiere temperatura menor a 10 °C."""
         return self._temperaturaConservacion < 10.0
 
+    # Devuelve la descripción del producto perecedero y su estado de caducidad.
     def __str__(self) -> str:
-        """Devuelve la descripción del producto perecedero y su estado de caducidad."""
         estado = "CADUCADO" if self.verificarCaducidad() else "Vigente"
         return (
             super().__str__()
@@ -227,9 +223,9 @@ class Perecedero(Producto):
         )
 
 
+# Subclase de Producto para artículos de almacén sin caducidad inmediata.
 class NoPerecedero(Producto):
-    """Subclase de Producto para artículos de almacén sin caducidad inmediata."""
-
+    # Inicializa un producto no perecedero validando su material de empaque.
     def __init__(
         self,
         codigo: str,
@@ -239,19 +235,18 @@ class NoPerecedero(Producto):
         categoria: Categoria,
         materialEmpaque: str,
     ):
-        """Inicializa un producto no perecedero validando su material de empaque."""
         super().__init__(codigo, nombre, stock, precio, categoria)
         if not materialEmpaque or not str(materialEmpaque).strip():
             raise ValueError("El material de empaque no puede estar vacío.")
         self._materialEmpaque = str(materialEmpaque).strip()
 
+    # Devuelve el material de empaque del producto.
     @property
     def materialEmpaque(self) -> str:
-        """Devuelve el material de empaque del producto."""
         return self._materialEmpaque
 
+    # Evalúa si el material de empaque garantiza conservación prolongada.
     def esDeLargaDuracion(self) -> bool:
-        """Evalúa si el material de empaque garantiza conservación prolongada."""
         empaquesLargaDuracion = {
             "lata",
             "vidrio",
@@ -266,8 +261,8 @@ class NoPerecedero(Producto):
         }
         return self._materialEmpaque.lower() in empaquesLargaDuracion
 
+    # Devuelve la descripción del producto no perecedero y su empaque.
     def __str__(self) -> str:
-        """Devuelve la descripción del producto no perecedero y su empaque."""
         duracion = "Larga duración" if self.esDeLargaDuracion() else "Duración estándar"
         return (
             super().__str__()
@@ -275,11 +270,10 @@ class NoPerecedero(Producto):
         )
 
 
+# Representa un proveedor encargado de suministrar mercancía a la tienda.
 class Proveedor:
-    """Representa un proveedor encargado de suministrar mercancía a la tienda."""
-
+    # Inicializa un proveedor validando su identificador, nombre y teléfono.
     def __init__(self, idProveedor: int, nombre: str, telefono: str):
-        """Inicializa un proveedor validando su identificador, nombre y teléfono."""
         if int(idProveedor) <= 0:
             raise ValueError("El ID del proveedor debe ser mayor a cero.")
         if not nombre or not str(nombre).strip():
@@ -291,43 +285,42 @@ class Proveedor:
         self._nombre = str(nombre).strip()
         self._telefono = str(telefono).strip()
 
+    # Devuelve el identificador del proveedor.
     @property
     def idProveedor(self) -> int:
-        """Devuelve el identificador del proveedor."""
         return self._idProveedor
 
+    # Devuelve el nombre del proveedor.
     @property
     def nombre(self) -> str:
-        """Devuelve el nombre del proveedor."""
         return self._nombre
 
+    # Devuelve el teléfono de contacto del proveedor.
     @property
     def telefono(self) -> str:
-        """Devuelve el teléfono de contacto del proveedor."""
         return self._telefono
 
+    # Abastece unidades de un producto incrementando su stock.
     def suministrarProducto(self, producto: Producto, cantidad: int):
-        """Abastece unidades de un producto incrementando su stock."""
         if int(cantidad) <= 0:
             raise ValueError("La cantidad suministrada debe ser mayor a cero.")
         producto.actualizarStock(int(cantidad))
 
+    # Actualiza el número telefónico del proveedor.
     def actualizarDatos(self, nuevoTelefono: str):
-        """Actualiza el número telefónico del proveedor."""
         if not nuevoTelefono or not str(nuevoTelefono).strip():
             raise ValueError("El teléfono no puede estar vacío.")
         self._telefono = str(nuevoTelefono).strip()
 
+    # Devuelve la representación textual del proveedor.
     def __str__(self) -> str:
-        """Devuelve la representación textual del proveedor."""
         return f"Proveedor #{self._idProveedor}: {self._nombre} (Tel: {self._telefono})"
 
 
+# Representa una línea de producto y cantidad dentro de una venta.
 class DetalleVenta:
-    """Representa una línea de producto y cantidad dentro de una venta."""
-
+    # Inicializa un detalle validando cantidad positiva y existencias disponibles.
     def __init__(self, producto: Producto, cantidad: int):
-        """Inicializa un detalle validando cantidad positiva y existencias disponibles."""
         cantidadInt = int(cantidad)
         if cantidadInt <= 0:
             raise ValueError("La cantidad en el detalle debe ser mayor a cero.")
@@ -340,27 +333,27 @@ class DetalleVenta:
         self._cantidad = cantidadInt
         self._subtotal = self.calcularSubtotal()
 
+    # Devuelve el producto asociado al detalle.
     @property
     def producto(self) -> Producto:
-        """Devuelve el producto asociado al detalle."""
         return self._producto
 
+    # Devuelve la cantidad de unidades incluidas en el detalle.
     @property
     def cantidad(self) -> int:
-        """Devuelve la cantidad de unidades incluidas en el detalle."""
         return self._cantidad
 
+    # Devuelve el subtotal calculado del detalle.
     @property
     def subtotal(self) -> float:
-        """Devuelve el subtotal calculado del detalle."""
         return self._subtotal
 
+    # Calcula el subtotal multiplicando el precio unitario por la cantidad.
     def calcularSubtotal(self) -> float:
-        """Calcula el subtotal multiplicando el precio unitario por la cantidad."""
         return self._producto.obtenerPrecio().obtenerValor() * self._cantidad
 
+    # Actualiza la cantidad del detalle y recalcula su subtotal.
     def actualizarCantidad(self, nuevaCantidad: int):
-        """Actualiza la cantidad del detalle y recalcula su subtotal."""
         cantidadInt = int(nuevaCantidad)
         if cantidadInt <= 0:
             raise ValueError("La cantidad en el detalle debe ser mayor a cero.")
@@ -371,16 +364,15 @@ class DetalleVenta:
         self._cantidad = cantidadInt
         self._subtotal = self.calcularSubtotal()
 
+    # Devuelve la línea formateada del detalle de venta.
     def __str__(self) -> str:
-        """Devuelve la línea formateada del detalle de venta."""
         return f"{self._cantidad}x {self._producto.nombre} - Subtotal: ${self._subtotal:.2f}"
 
 
+# Representa una transacción de venta con sus detalles y total.
 class Venta:
-    """Representa una transacción de venta con sus detalles y total."""
-
+    # Inicializa una venta con número de ticket y fecha.
     def __init__(self, numero: int, fecha: str):
-        """Inicializa una venta con número de ticket y fecha."""
         if int(numero) <= 0:
             raise ValueError("El número de venta debe ser mayor a cero.")
         if not fecha or not str(fecha).strip():
@@ -391,38 +383,38 @@ class Venta:
         self._listaDetalles = []
         self._total = 0.0
 
+    # Devuelve el número de folio de la venta.
     @property
     def numero(self) -> int:
-        """Devuelve el número de folio de la venta."""
         return self._numero
 
+    # Devuelve la fecha de la venta.
     @property
     def fecha(self) -> str:
-        """Devuelve la fecha de la venta."""
         return self._fecha
 
+    # Devuelve una copia de la lista de detalles de la venta.
     @property
     def listaDetalles(self) -> list:
-        """Devuelve una copia de la lista de detalles de la venta."""
         return list(self._listaDetalles)
 
+    # Devuelve el total acumulado de la venta.
     @property
     def total(self) -> float:
-        """Devuelve el total acumulado de la venta."""
         return self._total
 
+    # Agrega un detalle, descuenta el stock del producto y actualiza el total.
     def agregarDetalle(self, detalle: DetalleVenta):
-        """Agrega un detalle, descuenta el stock del producto y actualiza el total."""
         detalle.producto.actualizarStock(-detalle.cantidad)
         self._listaDetalles.append(detalle)
         self._total = self.calcularTotal()
 
+    # Suma los subtotales de todos los detalles mediante su propiedad pública.
     def calcularTotal(self) -> float:
-        """Suma los subtotales de todos los detalles mediante su propiedad pública."""
         return sum(d.subtotal for d in self._listaDetalles)
 
+    # Genera el ticket de compra formateado.
     def generarTicket(self) -> str:
-        """Genera el ticket de compra formateado."""
         ticket = f"\n--- TICKET DE VENTA #{self._numero} ---\nFecha: {self._fecha}\n"
         for det in self._listaDetalles:
             ticket += f"  - {det}\n"
@@ -430,11 +422,10 @@ class Venta:
         return ticket
 
 
+# Representa la tienda de abarrotes y administra su catálogo e inventario.
 class Tienda:
-    """Representa la tienda de abarrotes y administra su catálogo e inventario."""
-
+    # Inicializa la tienda con su nombre, dirección e inventario vacío.
     def __init__(self, nombre: str, direccion: str):
-        """Inicializa la tienda con su nombre, dirección e inventario vacío."""
         if not nombre or not str(nombre).strip():
             raise ValueError("El nombre de la tienda no puede estar vacío.")
         if not direccion or not str(direccion).strip():
@@ -445,31 +436,31 @@ class Tienda:
         self._inventario = []
         self._indiceCodigos = {}
 
+    # Devuelve el nombre de la tienda.
     @property
     def nombre(self) -> str:
-        """Devuelve el nombre de la tienda."""
         return self._nombre
 
+    # Devuelve la dirección de la tienda.
     @property
     def direccion(self) -> str:
-        """Devuelve la dirección de la tienda."""
         return self._direccion
 
+    # Devuelve una copia de la lista de productos en inventario.
     @property
     def inventario(self) -> list:
-        """Devuelve una copia de la lista de productos en inventario."""
         return list(self._inventario)
 
+    # Agrega un producto al inventario y lo indexa por su código.
     def agregarProducto(self, producto: Producto):
-        """Agrega un producto al inventario y lo indexa por su código."""
         clave = producto.codigo.upper()
         if clave in self._indiceCodigos:
             raise ValueError(f"Ya existe un producto con el código '{producto.codigo}'.")
         self._inventario.append(producto)
         self._indiceCodigos[clave] = producto
 
+    # Busca un producto por código; lanza ProductoNoEncontradoError si no existe.
     def buscarProductoPorCodigo(self, codigo: str) -> Producto:
-        """Busca un producto por código; lanza ProductoNoEncontradoError si no existe."""
         clave = str(codigo).strip().upper()
         try:
             return self._indiceCodigos[clave]
@@ -478,17 +469,17 @@ class Tienda:
                 f"No se encontró el producto con código '{codigo}'."
             ) from e
 
+    # Reemplaza el inventario actual de forma segura manteniendo el encapsulamiento.
     def reemplazarInventario(self, nuevaLista: list):
-        """Reemplaza el inventario actual de forma segura manteniendo el encapsulamiento."""
         self._inventario = []
         self._indiceCodigos = {}
         for prod in nuevaLista:
             self.agregarProducto(prod)
 
+    # Retorna una copia de los productos registrados en la tienda.
     def consultarInventario(self) -> list:
-        """Retorna una copia de los productos registrados en la tienda."""
         return list(self._inventario)
 
+    # Devuelve la descripción general de la tienda.
     def __str__(self) -> str:
-        """Devuelve la descripción general de la tienda."""
         return f"Tienda: {self._nombre} | Dirección: {self._direccion}"
