@@ -1,45 +1,137 @@
+# Módulo encargado de la persistencia del inventario en archivos de texto plano.
+
+import csv
 import os
-from modelos.producto import Producto, Perecedero, NoPerecedero, Precio, Categoria
+from modelos.producto import Perecedero, NoPerecedero, Precio, Categoria
 from utils.excepciones import registrarError
 
-class GestorArchivos:
-    @staticmethod
-    def guardarInventario(rutaArchivo: str, listaProductos: list):
-        """Guarda la lista de productos en un archivo de texto plano utilizando utf-8."""
-        try:
-            with open(rutaArchivo, "w", encoding="utf-8") as archivo:
-                for p in listaProductos:
-                    tipo = "Perecedero" if isinstance(p, Perecedero) else "NoPerecedero"
-                    extra = p.fechaCaducidad if isinstance(p, Perecedero) else p.materialEmpaque
-                    temp = p._temperaturaConservacion if isinstance(p, Perecedero) else 0.0
-                    
-                    linea = f"{tipo},{p.codigo},{p.nombre},{p.stock},{p.precio.obtenerValor()},{p._categoria.nombre},{extra},{temp}\n"
-                    archivo.write(linea)
-            print("✔ Inventario guardado exitosamente en archivo.")
-        except Exception as e:
-            registrarError(f"Error al guardar archivo: {type(e).__name__} - {e}")
 
+# Administra el guardado y la reconstrucción de productos en formato CSV/TXT.
+class GestorArchivos:
+    # Guarda la lista de productos en UTF-8 escapando comas mediante csv.writer.
+    @staticmethod
+    def guardarInventario(rutaArchivo: str, listaProductos: list) -> bool:
+        try:
+            with open(rutaArchivo, "w", encoding="utf-8", newline="") as archivo:
+                escritor = csv.writer(archivo)
+                for p in listaProductos:
+                    esPerecedero = isinstance(p, Perecedero)
+                    tipo = "Perecedero" if esPerecedero else "NoPerecedero"
+                    extra = p.fechaCaducidad if esPerecedero else p.materialEmpaque
+                    temp = p.temperaturaConservacion if esPerecedero else 0.0
+
+                    escritor.writerow([
+                        tipo,
+                        p.codigo,
+                        p.nombre,
+                        p.stock,
+                        p.precio.obtenerValor(),
+                        p.categoria.idCategoria,
+                        p.categoria.nombre,
+                        extra,
+                        temp,
+                    ])
+            print("✔ Inventario guardado exitosamente en archivo.")
+            return True
+        except PermissionError as e:
+            registrarError(f"PermissionError al guardar '{rutaArchivo}': {e}")
+            print(f"❌ Sin permisos para escribir en '{rutaArchivo}': {e}")
+            return False
+        except OSError as e:
+            registrarError(f"OSError al guardar '{rutaArchivo}': {e}")
+            print(f"❌ Error de entrada/salida al guardar: {e}")
+            return False
+
+    # Carga productos desde el archivo; si no existe, registra el evento y lo crea vacío.
     @staticmethod
     def cargarInventario(rutaArchivo: str) -> list:
-        """Carga y reconstruye los objetos desde el archivo de texto plano."""
         listaProductos = []
+
         if not os.path.exists(rutaArchivo):
-            raise FileNotFoundError(f"No se encontró el archivo: {rutaArchivo}")
-            
-        with open(rutaArchivo, "r", encoding="utf-8") as archivo:
-            for linea in archivo:
-                partes = linea.strip().split(",")
-                if len(partes) < 6:
-                    continue
-                tipo, codigo, nombre, stock, valorPrecio, nombreCat, extra, temp = partes
-                
-                cat = Categoria(1, nombreCat)
-                precioObj = Precio(float(valorPrecio))
-                
-                if tipo == "Perecedero":
-                    prod = Perecedero(codigo, nombre, int(stock), precioObj, cat, extra, float(temp))
-                else:
-                    prod = NoPerecedero(codigo, nombre, int(stock), precioObj, cat, extra)
-                
-                listaProductos.append(prod)
+            try:
+                raise FileNotFoundError(
+                    f"No se encontró el archivo '{rutaArchivo}'. Se creará automáticamente."
+                )
+            except FileNotFoundError as e:
+                registrarError(f"FileNotFoundError en GestorArchivos.cargarInventario: {e}")
+                try:
+                    with open(rutaArchivo, "w", encoding="utf-8", newline=""):
+                        pass
+                    print(f"ℹ Archivo '{rutaArchivo}' no existía y fue creado vacío.")
+                except PermissionError as permErr:
+                    registrarError(f"PermissionError al crear '{rutaArchivo}': {permErr}")
+                    raise
+                return listaProductos
+
+        try:
+            with open(rutaArchivo, "r", encoding="utf-8", newline="") as archivo:
+                lector = csv.reader(archivo)
+                for numLinea, partes in enumerate(lector, 1):
+                    if not partes:
+                        continue
+                    try:
+                        if len(partes) == 9:
+                            (
+                                tipo,
+                                codigo,
+                                nombre,
+                                stock,
+                                valorPrecio,
+                                idCat,
+                                nombreCat,
+                                extra,
+                                temp,
+                            ) = partes
+                            cat = Categoria(int(idCat), nombreCat)
+                        elif len(partes) == 8:
+                            (
+                                tipo,
+                                codigo,
+                                nombre,
+                                stock,
+                                valorPrecio,
+                                nombreCat,
+                                extra,
+                                temp,
+                            ) = partes
+                            cat = Categoria(1, nombreCat)
+                        else:
+                            raise ValueError(
+                                f"Línea {numLinea} inválida: se esperaban 9 campos y se recibieron {len(partes)}."
+                            )
+
+                        precioObj = Precio(float(valorPrecio))
+
+                        if tipo == "Perecedero":
+                            prod = Perecedero(
+                                codigo,
+                                nombre,
+                                int(stock),
+                                precioObj,
+                                cat,
+                                extra,
+                                float(temp),
+                            )
+                        else:
+                            prod = NoPerecedero(
+                                codigo,
+                                nombre,
+                                int(stock),
+                                precioObj,
+                                cat,
+                                extra,
+                            )
+
+                        listaProductos.append(prod)
+                    except (ValueError, TypeError) as e:
+                        registrarError(
+                            f"Error al reconstruir producto en línea {numLinea} de '{rutaArchivo}': {type(e).__name__} - {e}"
+                        )
+        except PermissionError as e:
+            registrarError(f"PermissionError al leer '{rutaArchivo}': {e}")
+            raise
+        except OSError as e:
+            registrarError(f"OSError al leer '{rutaArchivo}': {e}")
+            raise
+
         return listaProductos
