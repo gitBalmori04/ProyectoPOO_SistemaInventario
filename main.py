@@ -1,5 +1,5 @@
 import os
-from modelos.producto import Precio, Categoria, Perecedero, NoPerecedero, Proveedor, Venta, DetalleVenta, Tienda
+from modelos.producto import Precio, Categoria, Perecedero, NoPerecedero, Venta, DetalleVenta, Tienda
 from modelos.persistencia import GestorArchivos
 from utils.excepciones import registrarError
 
