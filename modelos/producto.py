@@ -91,19 +91,14 @@ class Producto:
     def __init__(self, codigo: str, nombre: str, stock: int, precio: Precio, categoria: Categoria):
         if not codigo or not str(codigo).strip():
             raise ValueError("El código del producto no puede estar vacío.")
-        if not nombre or not str(nombre).strip():
-            raise ValueError("El nombre del producto no puede estar vacío.")
         if not isinstance(precio, Precio):
             raise TypeError("El precio debe ser una instancia de Precio.")
-        if not isinstance(categoria, Categoria):
-            raise TypeError("La categoría debe ser una instancia de Categoria.")
 
         self._codigo = str(codigo).strip()
-        self._nombre = str(nombre).strip()
+        self.nombre = nombre
         self.stock = stock  # Invoca al setter para rechazar stock negativo desde __init__
         self._precio = precio
-        self._categoria = categoria
-        self._categoria.agregarProducto(self)
+        self.categoria = categoria
 
     # Devuelve el código único del producto.
     @property
@@ -114,6 +109,13 @@ class Producto:
     @property
     def nombre(self) -> str:
         return self._nombre
+
+    # Asigna un nuevo nombre validando que no esté vacío.
+    @nombre.setter
+    def nombre(self, nuevoNombre: str):
+        if not nuevoNombre or not str(nuevoNombre).strip():
+            raise ValueError("El nombre del producto no puede estar vacío.")
+        self._nombre = str(nuevoNombre).strip()
 
     # Devuelve las existencias actuales del producto.
     @property
@@ -139,6 +141,14 @@ class Producto:
     @property
     def categoria(self) -> Categoria:
         return self._categoria
+
+    # Asigna una nueva categoría validando su tipo.
+    @categoria.setter
+    def categoria(self, nuevaCategoria: Categoria):
+        if not isinstance(nuevaCategoria, Categoria):
+            raise TypeError("La categoría debe ser una instancia de Categoria.")
+        self._categoria = nuevaCategoria
+        self._categoria.agregarProducto(self)
 
     # Incrementa o decrementa el stock; lanza StockInsuficienteError si no alcanza.
     def actualizarStock(self, cantidad: int):
@@ -180,19 +190,38 @@ class Perecedero(Producto):
         temperaturaConservacion: float,
     ):
         super().__init__(codigo, nombre, stock, precio, categoria)
-        self._fechaCaducidad = str(fechaCaducidad).strip()
-        self._obtenerFechaDate()  # Valida que la fecha sea real desde el constructor
-        self._temperaturaConservacion = float(temperaturaConservacion)
+        self.fechaCaducidad = fechaCaducidad
+        self.temperaturaConservacion = temperaturaConservacion
 
     # Devuelve la fecha de caducidad en texto.
     @property
     def fechaCaducidad(self) -> str:
         return self._fechaCaducidad
 
+    # Actualiza y valida el formato de la fecha de caducidad.
+    @fechaCaducidad.setter
+    def fechaCaducidad(self, nuevaFecha: str):
+        fechaLimpia = str(nuevaFecha).strip()
+        for formato in ("%Y-%m-%d", "%d/%m/%Y"):
+            try:
+                datetime.strptime(fechaLimpia, formato)
+                self._fechaCaducidad = fechaLimpia
+                return
+            except ValueError:
+                continue
+        raise ValueError(
+            f"Formato de fecha inválido: '{fechaLimpia}'. Use YYYY-MM-DD."
+        )
+
     # Devuelve la temperatura de conservación en grados Celsius.
     @property
     def temperaturaConservacion(self) -> float:
         return self._temperaturaConservacion
+
+    # Actualiza la temperatura de conservación.
+    @temperaturaConservacion.setter
+    def temperaturaConservacion(self, nuevaTemp: float):
+        self._temperaturaConservacion = float(nuevaTemp)
 
     # Convierte la fecha de caducidad a objeto date (acepta YYYY-MM-DD o DD/MM/YYYY).
     def _obtenerFechaDate(self):
@@ -236,14 +265,19 @@ class NoPerecedero(Producto):
         materialEmpaque: str,
     ):
         super().__init__(codigo, nombre, stock, precio, categoria)
-        if not materialEmpaque or not str(materialEmpaque).strip():
-            raise ValueError("El material de empaque no puede estar vacío.")
-        self._materialEmpaque = str(materialEmpaque).strip()
+        self.materialEmpaque = materialEmpaque
 
     # Devuelve el material de empaque del producto.
     @property
     def materialEmpaque(self) -> str:
         return self._materialEmpaque
+
+    # Actualiza y valida el material de empaque.
+    @materialEmpaque.setter
+    def materialEmpaque(self, nuevoMaterial: str):
+        if not nuevoMaterial or not str(nuevoMaterial).strip():
+            raise ValueError("El material de empaque no puede estar vacío.")
+        self._materialEmpaque = str(nuevoMaterial).strip()
 
     # Evalúa si el material de empaque garantiza conservación prolongada.
     def esDeLargaDuracion(self) -> bool:
@@ -468,6 +502,14 @@ class Tienda:
             raise ProductoNoEncontradoError(
                 f"No se encontró el producto con código '{codigo}'."
             ) from e
+
+    # Elimina un producto del inventario y de su índice usando su código único.
+    def eliminarProducto(self, codigo: str) -> Producto:
+        clave = str(codigo).strip().upper()
+        productoEliminar = self.buscarProductoPorCodigo(clave)
+        self._inventario.remove(productoEliminar)
+        del self._indiceCodigos[clave]
+        return productoEliminar
 
     # Reemplaza el inventario actual de forma segura manteniendo el encapsulamiento.
     def reemplazarInventario(self, nuevaLista: list):
