@@ -1,3 +1,5 @@
+#Módulo que define la clase Precio para representar valores monetarios
+
 class Precio:
     def __init__(self, valor: float, moneda: str = "MXN"):
         self._valor = float(valor)
