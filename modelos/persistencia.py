@@ -31,15 +31,15 @@ class GestorArchivos:
                         extra,
                         temp,
                     ])
-            print("✔ Inventario guardado exitosamente en archivo.")
+            print("Inventario guardado exitosamente en archivo.")
             return True
         except PermissionError as e:
             registrarError(f"PermissionError al guardar '{rutaArchivo}': {e}")
-            print(f"❌ Sin permisos para escribir en '{rutaArchivo}': {e}")
+            print(f"Sin permisos para escribir en '{rutaArchivo}': {e}")
             return False
         except OSError as e:
             registrarError(f"OSError al guardar '{rutaArchivo}': {e}")
-            print(f"❌ Error de entrada/salida al guardar: {e}")
+            print(f"Error de entrada/salida al guardar: {e}")
             return False
 
     # Carga productos desde el archivo; si no existe, registra el evento y lo crea vacío.
